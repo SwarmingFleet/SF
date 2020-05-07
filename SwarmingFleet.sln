@@ -1,0 +1,47 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29920.165
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SwarmingFleet.Common", "src\SwarmingFleet.Common\SwarmingFleet.Common.csproj", "{ACC6997C-A786-4EF1-8ABB-2BFCDF1A43D0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SwarmingFleet.Worker", "src\SwarmingFleet.Worker\SwarmingFleet.Worker.csproj", "{5A89467B-AA19-4BDF-A908-8F7C1F49C1DA}"
+	ProjectSection(ProjectDependencies) = postProject
+		{457FA439-66E8-4D61-A5CF-FEF36EC52949} = {457FA439-66E8-4D61-A5CF-FEF36EC52949}
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A61A0009-F122-4784-8B3F-E9550B4B57E1}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SwarmingFleet.Broker", "src\SwarmingFleet.Broker\SwarmingFleet.Broker.csproj", "{457FA439-66E8-4D61-A5CF-FEF36EC52949}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{ACC6997C-A786-4EF1-8ABB-2BFCDF1A43D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ACC6997C-A786-4EF1-8ABB-2BFCDF1A43D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ACC6997C-A786-4EF1-8ABB-2BFCDF1A43D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ACC6997C-A786-4EF1-8ABB-2BFCDF1A43D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5A89467B-AA19-4BDF-A908-8F7C1F49C1DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A89467B-AA19-4BDF-A908-8F7C1F49C1DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5A89467B-AA19-4BDF-A908-8F7C1F49C1DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5A89467B-AA19-4BDF-A908-8F7C1F49C1DA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{457FA439-66E8-4D61-A5CF-FEF36EC52949}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{457FA439-66E8-4D61-A5CF-FEF36EC52949}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{457FA439-66E8-4D61-A5CF-FEF36EC52949}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{457FA439-66E8-4D61-A5CF-FEF36EC52949}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {02EEF1C9-E7FC-4DEB-A185-2E6538E58C04}
+	EndGlobalSection
+EndGlobal

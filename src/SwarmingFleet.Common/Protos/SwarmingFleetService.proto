@@ -1,0 +1,56 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "SwarmingFleet.Contracts";
+
+package SwarmingFleet;
+
+//
+service Service {
+    // 連線
+    rpc Connect (AccessControlRequest) returns (AccessControlReply);
+    // 斷線
+    rpc Disconnect (AccessControlRequest) returns (AccessControlReply);
+    // 測量延遲
+    rpc Echo (PingRequest) returns (PingReply);
+}
+
+// ping
+message PingRequest { 
+    int64 timestamp = 1;
+}
+// pong
+message PingReply {
+    int64 timestamp = 1;
+    int64 brokerTimestamp = 2;
+}
+
+// 工作機
+message Worker {
+    // 識別碼 (UUID)
+    string identifier = 1;
+    // 工作者 IP 位址
+    string ip = 2;
+}
+
+// 存取請求
+message AccessControlRequest {
+    // 工作機
+    Worker worker = 1;
+    // 目前時間
+    int64 timestamp = 2;
+}
+
+// 存取回應
+message AccessControlReply {
+    // 狀態列舉
+    enum State {
+        disconnected = 0;
+        connected = 1;
+    }
+    // 狀態
+    State state = 1;
+    // 目前時間
+    int64 timestamp = 2;
+}
+
+
