@@ -3,7 +3,7 @@
     "SwarmingFleet.Broker": {
       "commandName": "Project",
       "launchBrowser": false,
-      "applicationUrl": "https://localhost:5001",
+      "applicationUrl": "http://0.0.0.0:80",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

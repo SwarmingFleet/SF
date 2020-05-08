@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,15 +13,17 @@ using SwarmingFleet.Broker.Services;
 namespace SwarmingFleet.Broker
 {
     public class Startup
-    {
-        // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
+    { 
         public void ConfigureServices(IServiceCollection services)
         {
+            var queue = new BlockingCollection<string>();
+            queue.Add("https://google.com?q=orlys");
+            queue.Add("https://en.wikipedia.org/wiki/Web_crawler");
+            services.AddSingleton(queue);
             services.AddGrpc();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())

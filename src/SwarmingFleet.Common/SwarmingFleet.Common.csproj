@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Protos\SwarmingFleetService.proto" />
+    <None Remove="Protos\Service.proto" />
   </ItemGroup>
 
   <ItemGroup>
@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Protobuf Include="Protos\SwarmingFleetService.proto" />
+    <Protobuf Include="Protos\Service.proto" />
   </ItemGroup>
 
 </Project>
