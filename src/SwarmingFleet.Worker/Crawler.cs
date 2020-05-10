@@ -6,9 +6,7 @@ namespace SwarmingFleet.Worker
     using SwarmingFleet.Contracts;
     using System;
     using System.Linq;
-    using System.Management;
     using System.Net.Http;
-    using System.Net.NetworkInformation;
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
@@ -18,31 +16,22 @@ namespace SwarmingFleet.Worker
     using HtmlAgilityPack;
     using System.Diagnostics;
     using System.Collections.Generic;
+    using SwarmingFleet.Common;
 
     public class Crawler
     {
         private Worker BuildWorkerObject()
-        {
-            var memSize = (ulong)(new ManagementObjectSearcher("SELECT * FROM Win32_PhysicalMemory")
-          .Get().Cast<ManagementObject>()
-          .Sum(mo => (double)(ulong)mo["Capacity"]) / 1048576);
-
-            var macs = from nic in NetworkInterface.GetAllNetworkInterfaces()
-                       where nic.NetworkInterfaceType == NetworkInterfaceType.Ethernet
-                       select nic.GetPhysicalAddress().ToString();
-
-            var processors = new ManagementObjectSearcher("SELECT * FROM Win32_Processor")
-                .Get().Cast<ManagementObject>()
-                .Select(mo => (string)mo["ProcessorId"]);
-
-            var worker = new Contracts.Worker
-            {
-                MemorySize = memSize,
+        { 
+            var worker = new Worker
+            { 
                 OperationSystem = RuntimeInformation.OSDescription,
                 Name = Environment.MachineName
-            };
-            worker.Processors.AddRange(processors);
-            worker.MacAddresses.AddRange(macs);
+            }; 
+            worker.CPUs.AddRange(DeviceInfo.CPUs);
+            worker.MACs.AddRange(DeviceInfo.MacAddresses.Values);
+            worker.GPUs.AddRange(DeviceInfo.GPUs.Select(x => $"{x.Key} ({x.Value}GB)"));
+            worker.MemorySizes.AddRange(DeviceInfo.RAMs);
+            worker.StorageSizes.AddRange(DeviceInfo.Disks.Values);
             return worker;
         }
 
@@ -109,7 +98,7 @@ namespace SwarmingFleet.Worker
             await Task.Run(async () =>
             {
                 var channel = GrpcChannel.ForAddress(endpoint, options);
-                var client = new ServiceClient(channel); 
+                var client = new ServiceClient(channel);
                 // 連線請求
                 var connectRequest = new ConnectRequest
                 {
@@ -120,38 +109,44 @@ namespace SwarmingFleet.Worker
                 if (!connectReply.IsConnected)
                     await Task.FromException(new RpcException(Status.DefaultCancelled));
                 else
-                { 
+                {
                     var target = connectReply.Task.Urls[0];
 
                     while (!cancellationToken.IsCancellationRequested)
                     {
-                        Console.WriteLine("crawling: " + target); 
                         var task = s_none;
                         var get = default(HttpResponseMessage);
                         try
-                        { 
+                        {
+                            // 替換成 Selenium/PhantomJs
+                            // ----------------- begin todo -------------------
+
+
                             get = await httpClient.GetAsync(target);
                             var doc = new HtmlDocument();
                             var content = await get.Content.ReadAsStreamAsync();
                             doc.Load(content);
-                             
-                            if(doc.DocumentNode.SelectNodes("//a") is HtmlNodeCollection nodes)
+
+                            if (doc.DocumentNode.SelectNodes("//a") is HtmlNodeCollection nodes)
                             {
                                 var hrefs = (from node in nodes
                                              let p = node.GetAttributeValue("href", null)
                                              where p != null && p.StartsWith("http")
                                              select p).ToArray();
-                                if(hrefs.Length > 0)
+                                if (hrefs.Length > 0)
                                 {
                                     task = new CrawlTask();
                                     task.Urls.AddRange(hrefs);
                                 }
-                            } 
+                            }
+
+                            // ------------------ end todo --------------------
+                            Console.WriteLine("crawled: " + target);
 
                         }
                         catch (Exception e)
                         {
-                            Console.WriteLine("raised: " + e); 
+                            Console.WriteLine("unhandled: " + target);
                         }
 
                         var now = DateTime.UtcNow;
@@ -160,7 +155,7 @@ namespace SwarmingFleet.Worker
                             Task = task,
                             Timestamp = now.Ticks,
                             Uuid = connectReply.Uuid
-                        }; 
+                        };
                         var handleReply = await client.HandleAsync(handleRequest);
                         target = handleReply.Task.Urls[0];
                     }
@@ -169,10 +164,10 @@ namespace SwarmingFleet.Worker
         }
      
         static async Task Main(string[] args)
-        {
+        {   
             AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 
-            var host = new Uri("http://dev.orlys.site");
+            var host = new Uri("http://sybilina.cf");
 
             var crawler = new Crawler(); 
 

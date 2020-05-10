@@ -89,9 +89,14 @@ message CrawlTask {
     // 作業系統
 	string operationSystem = 2;
     // 記憶體大小
-	uint64 memorySize = 3;
-    // 處理器
-	repeated string processors = 4;
+	repeated uint64 memorySizes = 3;
+    // 中央處理器
+	repeated string CPUs = 4;
+    // 圖形處理器
+	repeated string GPUs = 5;
     // MAC 位址
-	repeated string macAddresses = 5;
+	repeated string MACs = 6;
+    // 硬碟大小
+	repeated uint64 storageSizes = 7; 
+
 } 

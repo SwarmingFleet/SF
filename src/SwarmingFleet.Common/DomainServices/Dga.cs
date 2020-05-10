@@ -41,6 +41,4 @@ namespace SwarmingFleet.DomainServices
             return domain.ToString();
         }
     }
-
-    
 } 
