@@ -9,8 +9,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using SwarmingFleet.Broker.DataAccessLayers;
+using SwarmingFleet.Broker.DAL; 
 using SwarmingFleet.Broker.Services;
+using SwarmingFleet.DAL;
 
 namespace SwarmingFleet.Broker
 {
@@ -43,6 +44,7 @@ namespace SwarmingFleet.Broker
             {
                 app.UseDeveloperExceptionPage();
             }
+
             dbContext.Database.EnsureCreated();
             app.UseRouting();
 

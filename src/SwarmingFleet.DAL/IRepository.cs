@@ -1,10 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Linq;
-using System.Linq.Expressions;
+﻿
 
-namespace SwarmingFleet.Broker.DataAccessLayers
+namespace SwarmingFleet.DAL
 {
+    using Microsoft.EntityFrameworkCore;
+    using System;
+    using System.Linq;
+    using System.Linq.Expressions;
     public interface IRepository<TKey, TEntity>
         where TKey : struct
         where TEntity : class, IKeyed<TKey>

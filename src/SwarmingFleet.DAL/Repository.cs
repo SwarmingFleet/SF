@@ -1,5 +1,5 @@
 ﻿
-namespace SwarmingFleet.Broker.DataAccessLayers
+namespace SwarmingFleet.DAL
 {
     using System;
     using System.Collections.Generic;

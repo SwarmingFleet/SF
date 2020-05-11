@@ -15,9 +15,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 		.gitattributes = .gitattributes
 		.gitignore = .gitignore
+		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SwarmingFleet.Broker", "src\SwarmingFleet.Broker\SwarmingFleet.Broker.csproj", "{457FA439-66E8-4D61-A5CF-FEF36EC52949}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SwarmingFleet.DAL", "src\SwarmingFleet.DAL\SwarmingFleet.DAL.csproj", "{E90FCE6D-94EE-47C0-BB6E-0E542B664BAE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,6 +40,10 @@ Global
 		{457FA439-66E8-4D61-A5CF-FEF36EC52949}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{457FA439-66E8-4D61-A5CF-FEF36EC52949}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{457FA439-66E8-4D61-A5CF-FEF36EC52949}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E90FCE6D-94EE-47C0-BB6E-0E542B664BAE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E90FCE6D-94EE-47C0-BB6E-0E542B664BAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E90FCE6D-94EE-47C0-BB6E-0E542B664BAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E90FCE6D-94EE-47C0-BB6E-0E542B664BAE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

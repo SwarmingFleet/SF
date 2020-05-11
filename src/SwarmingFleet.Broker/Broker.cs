@@ -14,8 +14,7 @@ namespace SwarmingFleet.Broker
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Hosting;
     using RabbitMQ.Client;
-    using RabbitMQ.Client.Events;
-    using SwarmingFleet.Broker.DataAccessLayers; 
+    using RabbitMQ.Client.Events; 
 
     public class Broker
     {

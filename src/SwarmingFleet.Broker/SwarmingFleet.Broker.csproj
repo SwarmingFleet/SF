@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SwarmingFleet.Common\SwarmingFleet.Common.csproj" />
+    <ProjectReference Include="..\SwarmingFleet.DAL\SwarmingFleet.DAL.csproj" />
   </ItemGroup>
 
 </Project>

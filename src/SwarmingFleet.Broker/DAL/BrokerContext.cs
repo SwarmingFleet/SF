@@ -1,12 +1,11 @@
 ﻿
-namespace SwarmingFleet.Broker.DataAccessLayers
+namespace SwarmingFleet.Broker.DAL
 {
     using System.Text;
     using System.Threading.Tasks;
 
     using Microsoft.EntityFrameworkCore;
-    using Microsoft.EntityFrameworkCore.Metadata.Builders;
-    using SwarmingFleet.Contracts;
+    using Microsoft.EntityFrameworkCore.Metadata.Builders; 
 
     public class BrokerContext : DbContext
     {
@@ -14,7 +13,6 @@ namespace SwarmingFleet.Broker.DataAccessLayers
         {
         }
 
-        public DbSet<WorkerInfo> Workers { get; set; }
-
+        public DbSet<WorkerInfo> Workers { get; set; } 
     }
 }

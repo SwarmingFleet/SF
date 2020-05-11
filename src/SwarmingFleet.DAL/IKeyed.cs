@@ -1,5 +1,5 @@
 ﻿
-namespace SwarmingFleet.Broker.DataAccessLayers
+namespace SwarmingFleet.DAL
 {
     public interface IKeyed<TKey> where TKey : struct
     {

@@ -110,6 +110,8 @@ namespace SwarmingFleet.Worker
                     await Task.FromException(new RpcException(Status.DefaultCancelled));
                 else
                 {
+                    Console.Title = connectReply.Address;
+
                     var target = connectReply.Task.Urls[0];
 
                     while (!cancellationToken.IsCancellationRequested)
