@@ -22,6 +22,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SwarmingFleet.Broker", "src
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SwarmingFleet.DAL", "src\SwarmingFleet.DAL\SwarmingFleet.DAL.csproj", "{E90FCE6D-94EE-47C0-BB6E-0E542B664BAE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SwarmingFleet.Contracts", "src\SwarmingFleet.Contracts\SwarmingFleet.Contracts.csproj", "{5102896B-310A-4960-BFC9-D1B16760F900}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,6 +46,10 @@ Global
 		{E90FCE6D-94EE-47C0-BB6E-0E542B664BAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E90FCE6D-94EE-47C0-BB6E-0E542B664BAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E90FCE6D-94EE-47C0-BB6E-0E542B664BAE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5102896B-310A-4960-BFC9-D1B16760F900}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5102896B-310A-4960-BFC9-D1B16760F900}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5102896B-310A-4960-BFC9-D1B16760F900}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5102896B-310A-4960-BFC9-D1B16760F900}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -13,6 +13,6 @@ namespace SwarmingFleet.Broker.DAL
         {
         }
 
-        public DbSet<WorkerInfo> Workers { get; set; } 
+
     }
 }

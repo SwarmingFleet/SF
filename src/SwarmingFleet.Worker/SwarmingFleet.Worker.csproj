@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SwarmingFleet.Common\SwarmingFleet.Common.csproj" />
+    <ProjectReference Include="..\SwarmingFleet.Contracts\SwarmingFleet.Contracts.csproj" />
   </ItemGroup>
 
 </Project>
