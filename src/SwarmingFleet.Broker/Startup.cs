@@ -1,11 +1,13 @@
-﻿//#define USE_EF_DB
+﻿#define USE_EF_DB
 
 namespace SwarmingFleet.Broker
 {
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
+    using System.Text;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
@@ -13,6 +15,7 @@ namespace SwarmingFleet.Broker
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Caching.Memory;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.FileProviders;
     using Microsoft.Extensions.Hosting;
     using SwarmingFleet.Broker.DAL;
     using SwarmingFleet.Broker.Services;
@@ -31,27 +34,53 @@ namespace SwarmingFleet.Broker
         }
 
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env )
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, BrokerContext context)
         {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
+            context.Database.EnsureCreated(); 
 
-#if USE_EF_DB
-            dbContext.Database.EnsureCreated();
-#endif
+
             app.UseRouting();
 
             app.UseEndpoints(endpoints =>
             {
+               
+
                 endpoints.MapGrpcService<ConnectionService>();
 
                 endpoints.MapGet("/", async context =>
                 {
-                    await context.Response.WriteAsync("gRPC 服務已啟用");
+                    await context.Response.WriteAsync("gRPC 服務已啟用"); 
+                });
+                
+                endpoints.MapGet("/index", async context =>
+                {
+                    await context.Response.SendFileAsync(new S());
                 });
             });
         }
+    }
+
+    class S : IFileInfo
+    {
+        public Stream CreateReadStream()
+        {
+            return new MemoryStream();
+        }
+
+        public bool Exists => true;
+
+        public bool IsDirectory => false;
+
+        public DateTimeOffset LastModified => DateTimeOffset.UtcNow;
+
+        public long Length => throw new NotImplementedException();
+
+        public string Name => "Test.txt";
+
+        public string PhysicalPath => throw new NotImplementedException();
     }
 }

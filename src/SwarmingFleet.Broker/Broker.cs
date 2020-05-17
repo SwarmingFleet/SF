@@ -12,23 +12,23 @@ namespace SwarmingFleet.Broker
     using Grpc.Core;
     using Grpc.Net.Client;
     using Microsoft.AspNetCore.Hosting;
+    using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Hosting;
     using RabbitMQ.Client;
-    using RabbitMQ.Client.Events; 
+    using RabbitMQ.Client.Events;
+    using SwarmingFleet.Broker.DAL;
 
     public class Broker
     {
+
         public static async Task Main(string[] args)
         {
-            
-
-            //using (var resx = new BrokerContext())
-            //{  
-            //    foreach (var site in resx.Sites)
-            //    {
-            //        Console.WriteLine(site.Id + ": " +site.Url);
-            //    }
-            //}
+            var opt = new DbContextOptionsBuilder<BrokerContext>().UseSqlite("Data Source=broker.db").Options;
+            using (var db = new BrokerContext(opt))
+            {
+                //db.KeyPairs.Add(new KeyPair { Spk = "EvrAHJLz1kqGZR1FXSgZMw==", Registered = false });
+                //db.SaveChanges(); 
+            }
             CreateHostBuilder(args).Build().Run();
         }
 

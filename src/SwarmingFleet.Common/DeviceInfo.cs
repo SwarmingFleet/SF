@@ -7,7 +7,8 @@ namespace SwarmingFleet.Common
     using System.Numerics;
     using System.Text;
     using System.Linq;
-    using System; 
+    using System;
+    using System.Collections;
 
     public static class DeviceInfo
     {
@@ -82,48 +83,13 @@ namespace SwarmingFleet.Common
             RAMs = rams.ToImmutable();
 
 
-            int i = 0;
-            BigInteger big = 1;
-            using (var mos = new ManagementObjectSearcher(@"
-                SELECT 
-                    SerialNumber
-                FROM 
-                    Win32_DiskDrive")
-               .Get())
-            {
-                foreach (var mo in mos.Cast<ManagementObject>()
-                    .OrderBy(x => x.Properties["SerialNumber"].Value as string))
-                {
-                    big ^= (new BigInteger(Encoding.UTF8.GetBytes(mo["SerialNumber"] as string)) << i++);
-                }
-            }
-
-            using (var mos = new ManagementObjectSearcher(@"
-                SELECT 
-                    MACAddress 
-                FROM 
-                    Win32_NetworkAdapter 
-                WHERE 
-                    (MACAddress IS NOT NULL) AND
-                    (PNPDeviceID LIKE 'PCI\\%')")
-               .Get())
-            {
-                foreach (var mo in mos.Cast<ManagementObject>()
-                    .OrderBy(x => x.Properties["MACAddress"].Value as string))
-                {
-
-                    big ^= (new BigInteger(Encoding.UTF8.GetBytes(mo["MACAddress"] as string)) << i++);
-
-                }
-            }
-            Identifier = Convert.ToBase64String(big.ToByteArray());
         }
 
         public readonly static IImmutableDictionary<string, string> MacAddresses;
         public readonly static IImmutableList<string> CPUs;
         public readonly static IImmutableDictionary<string, uint> GPUs;
         public readonly static IImmutableDictionary<string, ulong> Disks;
-        public readonly static IImmutableList<ulong> RAMs;
-        public readonly static string Identifier;
+        public readonly static IImmutableList<ulong> RAMs; 
+
     }
 }

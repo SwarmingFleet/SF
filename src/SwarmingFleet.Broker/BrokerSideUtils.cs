@@ -17,11 +17,11 @@ namespace SwarmingFleet.Broker
             return ByteString.CopyFrom(cnonce);
         }
 
-        public static ByteString ComputeHash(ByteString nonce, ByteString cnonce, string activationCode)
+        public static ByteString ComputeHash(ByteString nonce, ByteString cnonce,string spk)
         {
             var n = new BitArray(nonce.ToArray());
             var nc = new BitArray(cnonce.ToArray());
-            var k = new BitArray(Guid.Parse(activationCode).ToByteArray());
+            var k = new BitArray(Convert.FromBase64String(spk));
             var r = n.Xor(nc).Xor(k);
             var ns = new byte[r.Count];
             r.CopyTo(ns, 0);

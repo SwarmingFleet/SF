@@ -1,4 +1,6 @@
 ﻿syntax = "proto3"; 
+import "Protos/version.proto";
+import "Protos/timestamp.proto";
 
 option csharp_namespace = "SwarmingFleet.Contracts";
 
@@ -8,14 +10,16 @@ service ConnectionService {
     rpc Prelogin (NonceRequest) returns (NonceReply);
     rpc Login (LoginRequest) returns (LoginReply);
 }
+
 // 隨機碼請求
 message NonceRequest {
-
+    Version version = 1;
 }
+
 // 隨機碼回應
 message NonceReply {
     // 隨機碼過期時間
-    Timestamp expiredTime = 1; 
+    google.protobuf.Timestamp expiredTime = 1; 
     // 隨機碼
     bytes nonce = 2;
 } 
@@ -26,6 +30,8 @@ message  LoginRequest {
     bytes nonce = 1;
     // 雜湊
     bytes hash = 2;
+    // 裝置唯一簽章
+    bytes signature = 3;
 }
 // 登入回應
 message LoginReply {
@@ -40,22 +46,21 @@ message LoginReply {
 // 錯誤
 enum LoginErrors { 
     keyDuplicated = 0;
-    // 隨機碼過期
-    nonceExpired = 1;
+    // 未經授權的登入動作
+    unauthorized = 1;
     // 雜湊不相符
     hashUnmatched = 2;
     // 重複登入
     repeatedLogon = 4;
+    // 惡意登入
+    wilfulLoginBehaviour = 5;
 }
 
 // 權杖
 message Token {
     // 過期時間
-    Timestamp expiredTime = 1; 
+    google.protobuf.Timestamp expiredTime = 1; 
     // 權杖實體
     bytes instance = 2;
 } 
 
-message Timestamp {
-    int64 ticks = 1;
-}
