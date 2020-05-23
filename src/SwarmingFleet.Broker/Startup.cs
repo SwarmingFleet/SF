@@ -9,9 +9,11 @@ namespace SwarmingFleet.Broker
     using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Authentication.Certificate;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Caching.Memory;
     using Microsoft.Extensions.DependencyInjection;
@@ -22,15 +24,17 @@ namespace SwarmingFleet.Broker
     using SwarmingFleet.DAL;
 
     public class Startup
-    { 
+    {
         public void ConfigureServices(IServiceCollection services)
-        {
+        { 
 #if USE_EF_DB
             services.AddDbContext<BrokerContext>(options => options.UseSqlite("Data Source=broker.db"));
 #endif
-
-            services.AddMemoryCache(); 
+            //services.AddAuthentication(CertificateAuthenticationDefaults.AuthenticationScheme).AddCertificate();
+            services.AddMemoryCache();
             services.AddGrpc();
+
+            services.AddControllers();
         }
 
 
@@ -40,47 +44,21 @@ namespace SwarmingFleet.Broker
             {
                 app.UseDeveloperExceptionPage();
             }
-            context.Database.EnsureCreated(); 
+            context.Database.EnsureCreated();
 
-
+            app.UseAuthentication();
             app.UseRouting();
 
             app.UseEndpoints(endpoints =>
-            {
-               
-
+            { 
                 endpoints.MapGrpcService<ConnectionService>();
 
                 endpoints.MapGet("/", async context =>
                 {
-                    await context.Response.WriteAsync("gRPC 服務已啟用"); 
-                });
-                
-                endpoints.MapGet("/index", async context =>
-                {
-                    await context.Response.SendFileAsync(new S());
+                    await context.Response.WriteAsync("Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
                 });
             });
         }
-    }
+    } 
 
-    class S : IFileInfo
-    {
-        public Stream CreateReadStream()
-        {
-            return new MemoryStream();
-        }
-
-        public bool Exists => true;
-
-        public bool IsDirectory => false;
-
-        public DateTimeOffset LastModified => DateTimeOffset.UtcNow;
-
-        public long Length => throw new NotImplementedException();
-
-        public string Name => "Test.txt";
-
-        public string PhysicalPath => throw new NotImplementedException();
-    }
 }

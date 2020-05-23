@@ -21,6 +21,8 @@ namespace SwarmingFleet.Worker
     using Polly;
     using Google.Protobuf;
     using Version = Contracts.Version;
+    using System.Net;
+    using System.Security.Cryptography.X509Certificates;
 
     public class Worker
     {
@@ -35,18 +37,34 @@ namespace SwarmingFleet.Worker
         //    //}); 
         //} 
 
+
+
         public async Task Run(Uri endpoint, CancellationToken cancellationToken = default)
         {
-            var polly = Policy.Handle<RpcException>().RetryAsync(5);
+            var polly = Policy.Handle<RpcException>().RetryAsync(5, (e, i) => Console.WriteLine(e.ToString() + "\r\n"));
+             
+            //using var cert = X509Certificate.CreateFromSignedFile(Assembly.GetExecutingAssembly().Location);
+            //using var cert2 = new X509Certificate2(cert);
 
-            var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+            var handler = new HttpClientHandler
+            { 
+                ServerCertificateCustomValidationCallback = delegate { return true; }
+            }; 
+
+            //handler.ClientCertificates.Add(cert2);
+            //handler. ClientCertificateOptions = ClientCertificateOption.Automatic;
+
+            var httpClient = new HttpClient(handler);
 
             var options = new GrpcChannelOptions
             {
                 HttpClient = httpClient,
                 //LoggerFactory = this._loggerFactory
             };
-              
+
+           /* var channelCredentials = new SslCredentials( ); */ // Load a custom roots file.
+            //var channel = new Channel(host, channelCredentials);
+
             var channel = GrpcChannel.ForAddress(endpoint, options);
             var client = new ConnectionServiceClient(channel);
 
@@ -76,12 +94,14 @@ namespace SwarmingFleet.Worker
 
         static Worker()
         {
-            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+            ServicePointManager.SecurityProtocol = (SecurityProtocolType)4032;
+
+            //AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
         }
 
         static async Task Main(string[] args)
         { 
-            var host = new Uri("http://sybilina.cf");
+            var host = new Uri("https://sybilina.cf");
 
             var worker = new Worker();
 
@@ -92,6 +112,6 @@ namespace SwarmingFleet.Worker
                  
                 Console.ReadKey();
             }
-        }
+        } 
     }
 }

@@ -18,6 +18,7 @@ namespace SwarmingFleet.Broker.Services
     using System.Threading.Tasks;
     using static SwarmingFleet.Contracts.ConnectionService;
 
+
     public class ConnectionService : ConnectionServiceBase
     {
         private readonly IMemoryCache _nonceCache;
@@ -32,8 +33,8 @@ namespace SwarmingFleet.Broker.Services
         }
 
         public override Task<NonceReply> Prelogin(NonceRequest request, ServerCallContext context)
-        { 
-            if(!this._nonceCache.TryGetValue(context.Peer, out NonceReply nonceReply))
+        {
+            if (!this._nonceCache.TryGetValue(context.Peer, out NonceReply nonceReply))
             {
                 // todo: 需關切此勞動者端點呼叫頻率並記錄狀況，在必要時控制防火牆行為
 
@@ -42,7 +43,7 @@ namespace SwarmingFleet.Broker.Services
                 var expiredTime = DateTime.UtcNow.AddSeconds(60);
                 nonceReply = new NonceReply
                 {
-                    ExpiredTime = Timestamp.FromDateTime(expiredTime), 
+                    ExpiredTime = Timestamp.FromDateTime(expiredTime),
                     Nonce = nonce
                 };
                 this._nonceCache.Set(context.Peer, nonceReply, expiredTime);
@@ -50,6 +51,7 @@ namespace SwarmingFleet.Broker.Services
 
             return Task.FromResult(nonceReply);
         }
+
 
         public override Task<LoginReply> Login(LoginRequest request, ServerCallContext context)
         {
@@ -68,51 +70,67 @@ namespace SwarmingFleet.Broker.Services
                     // 移除快取中的隨機碼
                     this._nonceCache.Remove(context.Peer);
                 }
+
                 // 未經驗證，需要重新呼叫 Prelogin 
                 else
                 {
                     // todo: 需關切此勞動者端點登入情形，並記錄登入狀況，在必要時控制防火牆行為
-                    return  new LoginReply { Error = LoginErrors.Unauthorized } ;
+                    return new LoginReply { Error = LoginErrors.Unauthorized };
                 }
 
                 var now = DateTime.UtcNow;
                 var dhk = request.Signature.ToBase64();
-
+                var spk = default(string); // 預設金鑰
                 // 如果能找到對應的裝置硬體金鑰
-                if (this._context.KeyPairs.FirstOrDefault(x => x.Dhk.Equals(dhk)) is KeyPair keyPair &&
-                    request.Hash.Equals(BrokerSideUtils.ComputeHash(nonceReply.Nonce, request.Nonce, keyPair.Spk)) &&
-                    keyPair.Registered)
+                if (this._context.KeyPairs.FirstOrDefault(x => x.Dhk.Equals(dhk)) is KeyPair keyPair)
                 {
-                    Console.WriteLine("n+");
-                    keyPair.LastOnlineTime = now;
-                    this._context.Update(keyPair);
-                    this._context.SaveChanges();
-                    goto Logon;
-                }
-                // 如果能透過伺服器預產金鑰及其雜湊找到，則為
-                else
-                { 
-                    foreach (var kp in this._context.KeyPairs)
+                    // 如果該勞動者端點所對應的預設金鑰能找到，表示重複登入
+                    if (this._tokenCache.TryGetValue(keyPair.Spk, out token))
                     {
-                        var hash = BrokerSideUtils.ComputeHash(nonceReply.Nonce, request.Nonce, kp.Spk);
-                        // 第一次登入，需綁定資料
-                        if (hash.Equals(request.Hash) && !kp.Registered)
-                        {
-                            Console.WriteLine("1st");
-                            kp.Dhk = dhk;
-                            kp.Registered = true;
-                            kp.LastOnlineTime = now;
-                            kp.CreatedTime = now;
-                            this._context.Update(kp);
-                            this._context.SaveChanges();
-                            goto Logon;
-                        }
+                        // todo: 需關切此勞動者端點登入情形，並記錄登入狀況，在必要時控制防火牆行為
+                        return new LoginReply { Error = LoginErrors.RepeatedLogon };
                     }
-                    // 兩種方法都無法登入，則為 移機 或 惡意登入
-                    return new LoginReply { Error = LoginErrors.WilfulLoginBehaviour };
+
+                    if (request.Hash.Equals(BrokerSideUtils.ComputeHash(nonceReply.Nonce, request.Nonce, keyPair.Spk)) &&
+                        keyPair.Registered)
+                    {
+                        keyPair.LastOnlineTime = now;
+                        this._context.Update(keyPair);
+                        this._context.SaveChanges();
+
+                        spk = keyPair.Spk;
+
+                        goto Logon;
+                    }
                 }
+
+                // 如果能透過伺服器預產金鑰及其雜湊找到，則為
+
+                foreach (var kp in this._context.KeyPairs)
+                {
+                    var hash = BrokerSideUtils.ComputeHash(nonceReply.Nonce, request.Nonce, kp.Spk);
+                    // 第一次登入，需綁定資料
+                    if (hash.Equals(request.Hash) && !kp.Registered)
+                    {
+                        kp.Dhk = dhk;
+                        kp.Registered = true;
+                        kp.LastOnlineTime = now;
+                        kp.CreatedTime = now;
+                        this._context.Update(kp);
+                        this._context.SaveChanges();
+
+                        spk = kp.Spk;
+
+                        goto Logon;
+                    }
+                }
+
+                // 兩種方法都無法登入，則為 移機 或 惡意登入
+                return new LoginReply { Error = LoginErrors.WilfulLoginBehaviour };
+
 
             Logon:
+
                 var expiredTime = now.AddHours(1);
                 var tokenInstance = ByteString.CopyFrom(Guid.NewGuid().ToByteArray());
                 token = new Token
@@ -120,10 +138,12 @@ namespace SwarmingFleet.Broker.Services
                     ExpiredTime = Timestamp.FromDateTime(expiredTime),
                     Instance = tokenInstance
                 };
+
                 this._tokenCache.Set(context.Peer, token, expiredTime);
+                this._tokenCache.Set(spk, token, expiredTime);
                 return new LoginReply { Token = token };
             });
-            
+
         }
     }
 }
