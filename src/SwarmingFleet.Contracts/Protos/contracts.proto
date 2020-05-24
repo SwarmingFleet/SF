@@ -45,15 +45,10 @@ message LoginReply {
 }
 // 錯誤
 enum LoginErrors { 
-    keyDuplicated = 0;
     // 未經授權的登入動作
-    unauthorized = 1;
-    // 雜湊不相符
-    hashUnmatched = 2;
+    unauthorized = 0;
     // 重複登入
     repeatedLogon = 4;
-    // 惡意登入
-    wilfulLoginBehaviour = 5;
 }
 
 // 權杖

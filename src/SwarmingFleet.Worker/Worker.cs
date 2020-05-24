@@ -18,11 +18,10 @@ namespace SwarmingFleet.Worker
     using SwarmingFleet.Contracts;
     using System.Reflection;
     using System.Security.Cryptography;
-    using Polly;
-    using Google.Protobuf;
-    using Version = Contracts.Version;
+    using Polly; 
     using System.Net;
     using System.Security.Cryptography.X509Certificates;
+
 
     public class Worker
     {
@@ -36,12 +35,10 @@ namespace SwarmingFleet.Worker
         //    //    logging.SetMinimumLevel(LogLevel.Debug);
         //    //}); 
         //} 
-
-
-
+         
         public async Task Run(Uri endpoint, CancellationToken cancellationToken = default)
         {
-            var polly = Policy.Handle<RpcException>().RetryAsync(5, (e, i) => Console.WriteLine(e.ToString() + "\r\n"));
+            var polly = Policy.Handle<RpcException>().RetryAsync(5, (e, i) => Console.WriteLine(e.Message + "\r\n"));
              
             //using var cert = X509Certificate.CreateFromSignedFile(Assembly.GetExecutingAssembly().Location);
             //using var cert2 = new X509Certificate2(cert);
@@ -92,10 +89,25 @@ namespace SwarmingFleet.Worker
             }
         }
 
+#pragma warning disable IDE0052 
+        private static readonly Mutex s_mutex = null;
+#pragma warning restore IDE0052 
+
         static Worker()
         {
-            ServicePointManager.SecurityProtocol = (SecurityProtocolType)4032;
+            var token = Assembly.GetEntryAssembly().GetName().GetPublicKeyToken();
+            if (token == null || token.Length == 0)
+            { 
+                Environment.Exit(0);
+            }
 
+            s_mutex = new Mutex(false, Convert.ToBase64String(token), out var createdNew);
+            if (!createdNew)
+            {
+                Environment.Exit(0);
+            }
+
+            ServicePointManager.SecurityProtocol = (SecurityProtocolType)4032;
             //AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
         }
 

@@ -83,15 +83,12 @@
         { 
             var entrypoint = Assembly.GetEntryAssembly();
             var k = entrypoint.GetCustomAttribute<IdAttribute>()?.Binary ?? throw new InvalidProgramException();
-            Console.WriteLine(k.Length);
             try
             {
                // k.CheckElementsCount(128, nameof(k));
-                var cn = cnonce.ToArray();
-                Console.WriteLine(cn.Length);
+                var cn = cnonce.ToArray(); 
                // cn.CheckElementsCount(128, nameof(cn));
-                var n = nonce.ToArray();
-                Console.WriteLine(n.Length);
+                var n = nonce.ToArray(); 
                 // n.CheckElementsCount(128, nameof(n));
 
                 var r = new BitArray(cn)

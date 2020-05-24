@@ -7,12 +7,15 @@ namespace SwarmingFleet.Broker.Services
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Caching.Memory;
     using SwarmingFleet.Broker.DAL;
+    using SwarmingFleet.Common.Helpers;
     using SwarmingFleet.Collections.Generic;
+    using SwarmingFleet.Common;
     using SwarmingFleet.Contracts;
     using SwarmingFleet.DAL;
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
+    using System.ComponentModel;
     using System.Linq;
     using System.Reflection;
     using System.Threading.Tasks;
@@ -52,98 +55,116 @@ namespace SwarmingFleet.Broker.Services
             return Task.FromResult(nonceReply);
         }
 
-
         public override Task<LoginReply> Login(LoginRequest request, ServerCallContext context)
         {
-            return Task.Run(() =>
+            Task<LoginReply> Fail(LoginErrors error, HazardLevels hazardlevel, string remarks, string dhk = null, string spk = null)
             {
-                // 如果該勞動者端點所對應的權杖能找到，表示重複登入
-                if (this._tokenCache.TryGetValue(context.Peer, out Token token))
+                this._context.ConnectionLogs.Add(new ConnectionLog
                 {
-                    // todo: 需關切此勞動者端點登入情形，並記錄登入狀況，在必要時控制防火牆行為
-                    return new LoginReply { Error = LoginErrors.RepeatedLogon };
-                }
+                    Action = nameof(Login),
+                    Endpoint = context.Peer,
+                    Spk = spk ?? string.Empty,
+                    Dhk = dhk ?? string.Empty,
+                    HazardLevel = hazardlevel,
+                    Remarks = remarks,
+                });
+                this._context.SaveChanges();
+                return new LoginReply { Error = error }.WithTask();
+            }
+            
+            Task<LoginReply> Pass(Token token, KeyPair kp)
+            {
+                this._context.ConnectionLogs.Add(new ConnectionLog
+                {
+                    Action = nameof(Login),
+                    Endpoint = context.Peer,
+                    Spk = kp.Spk,
+                    Dhk = kp.Dhk
+                });
+                this._context.SaveChanges();
+                return new LoginReply { Token = token }.WithTask();
+            }
 
-                // 如果能找到隨機碼，表示隨機碼還沒過期
-                if (this._nonceCache.TryGetValue(context.Peer, out NonceReply nonceReply))
-                {
-                    // 移除快取中的隨機碼
-                    this._nonceCache.Remove(context.Peer);
-                }
+            var dhk = request.Signature.ToBase64();
 
-                // 未經驗證，需要重新呼叫 Prelogin 
-                else
-                {
-                    // todo: 需關切此勞動者端點登入情形，並記錄登入狀況，在必要時控制防火牆行為
-                    return new LoginReply { Error = LoginErrors.Unauthorized };
-                }
+            // 如果該勞動者端點所對應的權杖能找到，表示重複登入
+            if (this._tokenCache.TryGetValue(context.Peer, out Token token))
+            {
+                // todo: 需關切此勞動者端點登入情形，並記錄登入狀況，在必要時控制防火牆行為 
+                return Fail(LoginErrors.RepeatedLogon, HazardLevels.Low, "可能是權杖被盜用，也可能是權杖還沒過期就重新呼叫 Login", dhk);
+            }
 
-                var now = DateTime.UtcNow;
-                var dhk = request.Signature.ToBase64();
-                var spk = default(string); // 預設金鑰
-                // 如果能找到對應的裝置硬體金鑰
-                if (this._context.KeyPairs.FirstOrDefault(x => x.Dhk.Equals(dhk)) is KeyPair keyPair)
+            // 如果能找到隨機碼，表示隨機碼還沒過期
+            if (this._nonceCache.TryGetValue(context.Peer, out NonceReply nonceReply))
+            {
+                // 移除快取中的隨機碼
+                this._nonceCache.Remove(context.Peer);
+            }
+            // 未經驗證，需要重新呼叫 Prelogin 
+            else
+            {
+                // todo: 需關切此勞動者端點登入情形，並記錄登入狀況，在必要時控制防火牆行為 
+                return Fail(LoginErrors.Unauthorized, HazardLevels.Middle, "隨機碼過期，通常不太可能。隨機碼過期時間為 60 秒"); 
+            }
+
+            var now = DateTime.UtcNow;
+            var keyPair = default(KeyPair); // 預設金鑰對
+
+            foreach (var k in this._context.KeyPairs)
+            {
+                // 當雜湊符合
+                if (request.Hash.Equals(BrokerSideUtils.ComputeHash(nonceReply.Nonce, request.Nonce, k.Spk)))
                 {
-                    // 如果該勞動者端點所對應的預設金鑰能找到，表示重複登入
-                    if (this._tokenCache.TryGetValue(keyPair.Spk, out token))
+                    // 已綁定
+                    if (k.Registered)
                     {
-                        // todo: 需關切此勞動者端點登入情形，並記錄登入狀況，在必要時控制防火牆行為
-                        return new LoginReply { Error = LoginErrors.RepeatedLogon };
+                        // 如果能找到對應的裝置硬體金鑰
+                        if (k.Dhk.Equals(dhk))
+                        { 
+                            // 如果該勞動者端點所對應的伺服器預產金鑰能找到，表示重複登入
+                            if (this._tokenCache.TryGetValue(k.Spk, out token))
+                            {
+                                // todo: 需關切此勞動者端點登入情形，並記錄登入狀況，在必要時控制防火牆行為 
+                                return Fail(LoginErrors.RepeatedLogon, HazardLevels.Critical, "同台主機上重複的登入，因為Mutex的關係所以不太可能，判斷為惡意登入", k.Dhk, k.Spk);
+                            }
+
+                            k.LastOnlineTime = now;
+                            keyPair = k;
+                            goto Logon;
+                        }
+
                     }
-
-                    if (request.Hash.Equals(BrokerSideUtils.ComputeHash(nonceReply.Nonce, request.Nonce, keyPair.Spk)) &&
-                        keyPair.Registered)
-                    {
-                        keyPair.LastOnlineTime = now;
-                        this._context.Update(keyPair);
-                        this._context.SaveChanges();
-
-                        spk = keyPair.Spk;
-
-                        goto Logon;
-                    }
-                }
-
-                // 如果能透過伺服器預產金鑰及其雜湊找到，則為
-
-                foreach (var kp in this._context.KeyPairs)
-                {
-                    var hash = BrokerSideUtils.ComputeHash(nonceReply.Nonce, request.Nonce, kp.Spk);
                     // 第一次登入，需綁定資料
-                    if (hash.Equals(request.Hash) && !kp.Registered)
+                    else
                     {
-                        kp.Dhk = dhk;
-                        kp.Registered = true;
-                        kp.LastOnlineTime = now;
-                        kp.CreatedTime = now;
-                        this._context.Update(kp);
-                        this._context.SaveChanges();
-
-                        spk = kp.Spk;
-
+                        k.Dhk = dhk;
+                        k.Registered = true;
+                        k.LastOnlineTime = now;
+                        keyPair = k;
                         goto Logon;
                     }
-                }
+                } 
+            }
 
-                // 兩種方法都無法登入，則為 移機 或 惡意登入
-                return new LoginReply { Error = LoginErrors.WilfulLoginBehaviour };
+            // 兩種方法都無法登入，則為 移機 或 惡意登入
+            return Fail(LoginErrors.Unauthorized, HazardLevels.Critical , "移機或惡意登入", dhk);
 
+        Logon:
 
-            Logon:
+            this._context.Update(keyPair);
+            this._context.SaveChanges();
 
-                var expiredTime = now.AddHours(1);
-                var tokenInstance = ByteString.CopyFrom(Guid.NewGuid().ToByteArray());
-                token = new Token
-                {
-                    ExpiredTime = Timestamp.FromDateTime(expiredTime),
-                    Instance = tokenInstance
-                };
+            var expiredTime = now.AddRandomMinutes(1..60); 
+            token = new Token
+            {
+                ExpiredTime = Timestamp.FromDateTime(expiredTime),
+                Instance = ByteString.CopyFrom(Guid.NewGuid().ToByteArray())
+            };
 
-                this._tokenCache.Set(context.Peer, token, expiredTime);
-                this._tokenCache.Set(spk, token, expiredTime);
-                return new LoginReply { Token = token };
-            });
+            this._tokenCache.Set(context.Peer, token, expiredTime);
+            this._tokenCache.Set(keyPair.Spk, token, expiredTime); 
 
+            return Pass(token, keyPair);
         }
     }
 }
